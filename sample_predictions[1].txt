@@ -1,0 +1,2 @@
+Input: New AI smartphone released
+Output: technology
