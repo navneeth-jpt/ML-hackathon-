@@ -1,0 +1,178 @@
+<!-- Project Structure -->
+
+heart-disease-prediction/
+│
+├── backend/
+│   ├── app.py
+│   ├── model.py
+│   ├── model.pkl
+│   ├── heart.csv
+│   └── requirements.txt
+│
+├── frontend/
+│   ├── index.html
+│   ├── style.css
+│   └── script.js
+│
+└── README.md
+
+
+<!-- ================= BACKEND ================= -->
+
+# backend/app.py
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import joblib
+
+app = Flask(__name__)
+CORS(app)
+
+model = joblib.load('model.pkl')
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    data = request.json['features']
+    prediction = model.predict([data])
+    return jsonify({'prediction': int(prediction[0])})
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
+# backend/model.py
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+import joblib
+
+# Load dataset
+df = pd.read_csv('heart.csv')
+
+X = df.drop('target', axis=1)
+y = df['target']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+model = RandomForestClassifier()
+model.fit(X_train, y_train)
+
+joblib.dump(model, 'model.pkl')
+
+print("Model trained successfully!")
+
+
+# backend/requirements.txt
+flask
+flask-cors
+pandas
+numpy
+scikit-learn
+joblib
+
+
+<!-- ================= FRONTEND ================= -->
+
+<!-- frontend/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Heart Disease Predictor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>❤️ Heart Disease Prediction</h1>
+        <form id="form">
+            <input type="number" placeholder="Age" required>
+            <input type="number" placeholder="Sex (1=Male,0=Female)" required>
+            <input type="number" placeholder="Chest Pain Type" required>
+            <input type="number" placeholder="Resting BP" required>
+            <input type="number" placeholder="Cholesterol" required>
+            <input type="number" placeholder="Fasting Blood Sugar" required>
+            <input type="number" placeholder="Rest ECG" required>
+            <input type="number" placeholder="Max Heart Rate" required>
+            <input type="number" placeholder="Exercise Induced Angina" required>
+            <input type="number" placeholder="Oldpeak" required>
+            <input type="number" placeholder="Slope" required>
+            <input type="number" placeholder="CA" required>
+            <input type="number" placeholder="Thal" required>
+            <button type="submit">Predict</button>
+        </form>
+        <h2 id="result"></h2>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
+
+
+/* frontend/style.css */
+body {
+    font-family: Arial;
+    background: linear-gradient(to right, #ff758c, #ff7eb3);
+    text-align: center;
+}
+
+.container {
+    background: white;
+    padding: 20px;
+    margin: 50px auto;
+    width: 300px;
+    border-radius: 10px;
+}
+
+input {
+    width: 90%;
+    padding: 8px;
+    margin: 5px;
+}
+
+button {
+    padding: 10px;
+    background: #ff4b5c;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+
+// frontend/script.js
+const form = document.getElementById("form");
+
+form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const inputs = document.querySelectorAll("input");
+    const features = Array.from(inputs).map(i => Number(i.value));
+
+    const response = await fetch("http://127.0.0.1:5000/predict", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({features})
+    });
+
+    const data = await response.json();
+    document.getElementById("result").innerText = 
+        data.prediction === 1 ? "⚠️ Disease Detected" : "✅ No Disease";
+});
+
+
+<!-- ================= README ================= -->
+
+# ❤️ Heart Disease Prediction (Full Stack)
+
+## 🚀 Features
+- Machine Learning Model (Random Forest)
+- Flask Backend API
+- Interactive Frontend UI
+
+## ▶️ Run Backend
+cd backend
+pip install -r requirements.txt
+python model.py
+python app.py
+
+## ▶️ Run Frontend
+Open index.html in browser
+
+## 🌐 Output
+Predicts heart disease based on user input
