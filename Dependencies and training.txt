@@ -1,0 +1,59 @@
+Dependencies:
+pip install pandas numpy scikit-learn nltk joblib
+
+Preprocessing:
+import nltk
+import re
+nltk.download('stopwords')
+
+from nltk.corpus import stopwords
+
+stop_words = set(stopwords.words('english'))
+
+def clean_text(text):
+    text = text.lower()
+    text = re.sub(r'[^a-zA-Z]', ' ', text)
+    words = text.split()
+    words = [w for w in words if w not in stop_words]
+    return " ".join(words)
+
+Model Training:
+import pandas as pd
+from sklearn.preprocessing import MultiLabelBinarizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.multioutput import MultiOutputClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+import joblib
+
+from preprocess import clean_text
+
+# load dataset
+df = pd.read_csv("../dataset/news_dataset.csv")
+
+# preprocess text
+df['clean_text'] = df['text'].apply(clean_text)
+
+# convert labels
+df['labels'] = df['labels'].apply(lambda x: x.split(','))
+
+mlb = MultiLabelBinarizer()
+y = mlb.fit_transform(df['labels'])
+
+# vectorization
+tfidf = TfidfVectorizer(max_features=5000)
+X = tfidf.fit_transform(df['clean_text'])
+
+# split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+# model
+model = MultiOutputClassifier(LogisticRegression())
+model.fit(X_train, y_train)
+
+# save model
+joblib.dump(model, "../model/multilabel_model.pkl")
+joblib.dump(tfidf, "../model/vectorizer.pkl")
+joblib.dump(mlb, "../model/label_encoder.pkl")
+
+print("Model trained successfully!")
