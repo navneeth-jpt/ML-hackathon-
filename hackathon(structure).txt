@@ -1,0 +1,15 @@
+News-Article-MultiLabel-Classification
+│
+├── dataset
+│   └── news_dataset.csv
+│
+├── src
+│   ├── train.py
+│   ├── predict.py
+│   └── preprocess.py
+│
+├── model
+│   └── multilabel_model.pkl
+│
+├── requirements.txt
+└── README.md
